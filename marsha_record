@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+
+
+# Note: There was an issue when the right camera was pushed into the mount where ssh and remote desktop where disconnected from the jetson
+import cv2
+import numpy as np
+import os
+
+# gstreamer_pipeline returns a GStreamer pipeline for capturing from the CSI camera
+# Defaults to 1280x720 @ 60fps
+# Flip the image by setting the flip_method (most common values: 0 and 2)
+# display_width and display_height determine the size of the window on the screen
+
+RECORD_DIR = '.'
+RECORD_FILE = RECORD_DIR + "longeron_cam.avi"
+FPS = 30
+SIZE = (1280, 720)
+
+
+def gstreamer_pipeline(
+    camera_id=0,
+    capture_width=SIZE[0],
+    capture_height=SIZE[1],
+    display_width=SIZE[0],
+    display_height=SIZE[1],
+    framerate=FPS,
+    flip_method=0, # 0 = no rotation, 1 = 90 deg counterclockwise, 2 = 180 deg, 3 = 90 deg clockwise, 4 = horizontal flip, 5 - Upper right diagonal flip, 6 = vertical flip, 7 = upper left diagonal
+):
+    return (
+        "nvarguscamerasrc "
+        "sensor-id=%d ! "
+        "video/x-raw(memory:NVMM), "
+        "width=(int)%d, height=(int)%d, "
+        "format=(string)NV12, framerate=(fraction)%d/1 ! "
+        "nvvidconv flip-method=%d ! "
+        "video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! "
+        "videoconvert ! "
+        "video/x-raw, format=(string)BGR ! appsink "
+        % (
+            camera_id,
+            capture_width,
+            capture_height,
+            framerate,
+            flip_method,
+            display_width,
+            display_height,
+        )
+    )
+
+class Cam:
+    def __init__(self, cam_id=0):
+        self.cam_id = cam_id
+        self.capture = cv2.VideoCapture(gstreamer_pipeline(camera_id=cam_id, flip_method=2), cv2.CAP_GSTREAMER)
+        self.running = False
+
+    def read(self):
+        return self.capture.read()
+
+    def show(self):
+        ret, frame = self.read()
+        cv2.imshow("Cam" + str(self.cam_id), frame)
+
+    def get_frame(self):
+        ret, frame = self.read()
+        return frame
+
+    def capturing(self):
+        return self.capture.isOpened()
+
+    def test_cam(self):
+        if self.capturing():
+        
+            try:
+                r_frame = self.get_frame()
+
+                if type(r_frame) == np.ndarray:
+                    self.running = True
+                    return 1
+                else:
+                    rospy.logwarn("Cannot find camera!")
+                    self.running = False
+                    return -1
+                    # Uncomment this line to enable restarting cameras on failure
+                    #os.system("~/catkin_ws/src/marsha/marsha_detection/restart_cams.sh")
+                    
+            except Exception as e:
+                rospy.logerr("Error getting frame!")
+                return -2
+        else:
+            rospy.logerr("Camera not capturing!")
+            return -3
+
+    def release(self):
+        self.capture.release()
+
+class Recorder:
+    def __init__(self):
+        self.cam = Cam(0)
+        
+        if self.cam.test_cam():
+            print("Camera is working!")
+        else:
+            print("Error! Camera is not working!")
+
+
+    def run(self):
+        
+        recorder = cv2.VideoWriter(RIGHT_RECORD_FILE, cv2.VideoWriter_fourcc(*'XVID'), FPS, SIZE)
+
+        # Exit while loop when gpio pin connected to TE-R deactivates indicating 30 sec until power off.
+        while True:
+            if self.cam.running:
+                frame = self.cam.get_frame()
+                recorder.write(frame)
+
+        recorder.release()
+        self.cam.release()
+
+if __name__ == "__main__":
+    recorder = Recorder()
+    recorder.run()
+    print("done")
