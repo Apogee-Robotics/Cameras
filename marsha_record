@@ -105,7 +105,7 @@ class Recorder:
 
     def run(self):
         
-        recorder = cv2.VideoWriter(RIGHT_RECORD_FILE, cv2.VideoWriter_fourcc(*'XVID'), FPS, SIZE)
+        recorder = cv2.VideoWriter(RECORD_FILE, cv2.VideoWriter_fourcc(*'XVID'), FPS, SIZE)
 
         # Exit while loop when gpio pin connected to TE-R deactivates indicating 30 sec until power off.
         while True:
