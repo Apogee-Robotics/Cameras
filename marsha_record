@@ -11,8 +11,8 @@ import os
 # Flip the image by setting the flip_method (most common values: 0 and 2)
 # display_width and display_height determine the size of the window on the screen
 
-RECORD_DIR = '.'
-RECORD_FILE = RECORD_DIR + "longeron_cam.avi"
+RECORD_DIR = '../Desktop/'
+RECORD_FILE = RECORD_DIR + "longeron_cam0.avi"
 FPS = 30
 SIZE = (1280, 720)
 
@@ -72,22 +72,26 @@ class Cam:
         
             try:
                 r_frame = self.get_frame()
-
+                print(f"test_cam: got frame of type {type(frame)}")
                 if type(r_frame) == np.ndarray:
+                    print("Cam is running.")
                     self.running = True
                     return 1
                 else:
-                    rospy.logwarn("Cannot find camera!")
+                    #rospy.logwarn("Cannot find camera!")
+                    print("Cannot find camera!")
                     self.running = False
                     return -1
                     # Uncomment this line to enable restarting cameras on failure
                     #os.system("~/catkin_ws/src/marsha/marsha_detection/restart_cams.sh")
                     
             except Exception as e:
-                rospy.logerr("Error getting frame!")
+                #rospy.logerr("Error getting frame!")
+                print("Error getting frame!")
                 return -2
         else:
-            rospy.logerr("Camera not capturing!")
+            #rospy.logerr("Camera not capturing!")
+            print("Camera not capturing")
             return -3
 
     def release(self):
@@ -108,10 +112,13 @@ class Recorder:
         recorder = cv2.VideoWriter(RECORD_FILE, cv2.VideoWriter_fourcc(*'XVID'), FPS, SIZE)
 
         # Exit while loop when gpio pin connected to TE-R deactivates indicating 30 sec until power off.
-        while True:
+        #while True:
+        for i in range(120):
             if self.cam.running:
                 frame = self.cam.get_frame()
                 recorder.write(frame)
+            else:
+                print(f"Cam not running at iteration {i}")
 
         recorder.release()
         self.cam.release()
