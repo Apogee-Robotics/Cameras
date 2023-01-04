@@ -1,4 +1,5 @@
 import cv2
+import RPi.GPIO as gp
 import time
 
 SHOW_FRAME = 0
@@ -38,15 +39,27 @@ fcc = cv2.VideoWriter_fourcc(*'XVID')
 
 writer = []
 
-#Set up output files
-for file_num in range(NUM_FILES):   
-   for cam_num in range(NUM_CAMS):
-      file_name = f'cam{cam_num}_file{file_num}.avi'
-      writer.append(cv2.VideoWriter(file_name, fcc, FPS, (WIDTH, HEIGHT)))
+# #Set up output files
+# for file_num in range(NUM_FILES):   
+#    for cam_num in range(NUM_CAMS):
+#       file_name = f'/home/pi/cam{cam_num}_file{file_num}.avi'
+#       writer.append(cv2.VideoWriter(file_name, fcc, FPS, (WIDTH, HEIGHT)))
 
-print("set up files")
-    
-for file_num in range(NUM_FILES):
+# print("set up files")
+
+gp.setmode(gp.BOARD)
+gp.setup(37,gp.IN)
+
+print('Waiting for start...')
+while(not gp.input(37)):
+   time.sleep(1)
+
+file_num = 0
+while(gp.input(37)):
+
+   for cam_num in range(NUM_CAMS):
+      file_name = f'/home/pi/cam{cam_num}_file{file_num}.avi'
+      writer.append(cv2.VideoWriter(file_name, fcc, FPS, (WIDTH, HEIGHT)))
 
    for frame_num in range(NUM_FRAMES_PER_FILE): 
       for cam_num in range(NUM_CAMS):   
@@ -66,6 +79,8 @@ for file_num in range(NUM_FILES):
 
    for cam_num in range(NUM_CAMS):         
       writer[file_num*NUM_CAMS+cam_num].release()
+
+   file_num += 1
 
 
 for cam_num in range(NUM_CAMS):
