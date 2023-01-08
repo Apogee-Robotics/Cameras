@@ -1,6 +1,8 @@
 import cv2
 import RPi.GPIO as gp
 import time
+import os
+
 
 SHOW_FRAME = 0
 NUM_FILES = 5
@@ -8,6 +10,7 @@ NUM_FRAMES_PER_FILE = 90
 WIDTH = 640
 HEIGHT = 480
 FPS = 30
+
 
 
 print(f'Using OpenCV version {cv2.__version__}')
@@ -42,6 +45,7 @@ while(gp.input(37)):
         rt, frame = capture.read()
         if not rt:
             print("Failed to get a frame")
+            time.sleep(0.03)
 
         hms = time.strftime('%H-%M-%S', time.localtime())
         cv2.putText(frame, str(hms), (0, 35), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255))
