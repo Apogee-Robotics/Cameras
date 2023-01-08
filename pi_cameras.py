@@ -64,7 +64,7 @@ class Adapter:
         for cam in self.cameras:
             self.switch_camera(cam.cam_id)
             
-
+            #self.cap.read()
             rt, cam.frame = self.cap.read()
             if not rt:
                 print("Failed to get a frame")
@@ -72,7 +72,7 @@ class Adapter:
             hms = time.strftime('%H-%M-%S', time.localtime())
             cv2.putText(cam.frame, str(hms), (0, 35), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255))
             cam.writer.write(cam.frame)
-            time.sleep(0.1)
+            #time.sleep(0.09)
 
             
             if self.SHOW_FRAME:
@@ -127,7 +127,7 @@ class Camera:
    SHOW_FRAME = 0
    WIDTH = 640
    HEIGHT = 480
-   FPS = 30
+   FPS = 15
    
    def __init__(self, cam_id, output_dir="/home/pi", pin=37):
       self.cam_id = cam_id
