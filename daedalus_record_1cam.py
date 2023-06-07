@@ -16,7 +16,7 @@ HEIGHT = 720
 
 print(f'Using OpenCV version {cv2.__version__}')
 
-#time.sleep(10)
+time.sleep(30)
 
 testNumFile = open("/home/pi/TestVideos/testNumber.txt", 'r')
 testNum = int(testNumFile.read())
@@ -47,12 +47,12 @@ capture.set(cv2.CAP_PROP_FPS,FPS)
 #Test Camera
 if(not capture.isOpened()):
     #hms = time.strftime('%H-%M-%S', time.localtime())
-    log.write(f'\tCamera is NOT open\n')
-    print(f'Camera is NOT open')
+    log.write(f'{hms}\tCamera is NOT open\n')
+    print(f'{hms}Camera is NOT open')
 else:
     #hms = time.strftime('%H-%M-%S', time.localtime())
-    log.write(f'\tCamera is open\n')
-    print(f'Camera is open')
+    log.write(f'{hms}\tCamera is open\n')
+    print(f'{hms}Camera is open')
 
 fcc = cv2.VideoWriter_fourcc(*'XVID')
 
@@ -61,19 +61,23 @@ gp.setup(37,gp.IN)
 gp.setup(31,gp.IN)
 
 
-#hms = time.strftime('%H-%M-%S', time.localtime())
-log.write(f'\tWaiting for start...\n')
-print('Waiting for start...')
-while(not gp.input(37)):
-    while(not gp.input(37)):
-        time.sleep(0.5)
-    time.sleep(0.5)
+# #hms = time.strftime('%H-%M-%S', time.localtime())
+# log.write(f'{hms}\tWaiting for start...\n')
+# print(f'Waiting for start...')
+# while(not gp.input(37)):
+#     while(not gp.input(37)):
+#         time.sleep(0.5)
+#     time.sleep(0.5)
 
 hms = time.strftime('%H-%M-%S', time.localtime())
 log.write(f'{hms}\tStarting Recording...\n')
-print('Starting Recording')
+print(f'Starting Recording')
+
+te_count = 0
+
 file_num = 0
-while(gp.input(37)):
+#while(gp.input(37)):
+while(te_count < 21 or gp.input(37)):
     hms = time.strftime('%H-%M-%S', time.localtime())
 
     file_name = f'{file_folder}/{hms}VideoFile{file_num}.avi'
@@ -92,6 +96,12 @@ while(gp.input(37)):
         cv2.putText(frame, str(hms), (0, 35), cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255))
         writer.write(frame)
         #print(f'wrote frame {frame_num}')
+
+        if te_count < 21:
+            if gp.input(37):
+                te_count += 1
+            else:
+                te_count = 0
         
         if SHOW_FRAME:
             cv2.imshow('frame', frame)
@@ -103,6 +113,9 @@ while(gp.input(37)):
     writer.release()
 
     file_num += 1
+
+    
+  
 
 hms = time.strftime('%H-%M-%S', time.localtime())
 log.write(f'{hms}\tFinished Capturing\n')
